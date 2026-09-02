@@ -1,51 +1,99 @@
-import { createContext , useState } from "react";
+import { createContext, useEffect, useState } from "react";
 
 export const AuthContext = createContext(null);
 
-export default function AuthProvider ({children}) {
-    const [user, setUser] = useState(
-        localStorage.getItem("currentUserEmail")
-        ?{ email: localStorage.getItem("currentUserEmail") }
-        : null
-    );
+const AUTH_API_URL = "/api/auth";
 
-    function signup(email, password) {
-        const users = JSON.parse(localStorage.getItem('users')) || [];
+async function getResponseData(response) {
+    const data = await response.json().catch(() => ({}));
 
-        if (users.find((u) => u.email === email)) {
-            return { success: false, message: "Email already exists" };
+    if (!response.ok) {
+        throw new Error(data.message || "Authentication request failed");
+    }
+
+    return data;
+}
+
+export default function AuthProvider({ children }) {
+    const [user, setUser] = useState(null);
+
+    useEffect(() => {
+        let isActive = true;
+
+        async function restoreSession() {
+            try {
+                const response = await fetch(`${AUTH_API_URL}/session`, {
+                    credentials: "include",
+                });
+                const data = await getResponseData(response);
+
+                if (isActive) {
+                    setUser(data.user || null);
+                }
+            } catch {
+                if (isActive) {
+                    setUser(null);
+                }
+            }
         }
 
-        const newUser = { email,password,};
+        restoreSession();
 
-        users.push(newUser);
-        localStorage.setItem("users", JSON.stringify(users));
-        localStorage.setItem("currentUserEmail", email);
+        return () => {
+            isActive = false;
+        };
+    }, []);
 
-        setUser({ email });
-        return { success: true };
+    async function authenticate(endpoint, email, password) {
+        try {
+            const response = await fetch(`${AUTH_API_URL}/${endpoint}`, {
+                method: "POST",
+                credentials: "include",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ email, password }),
+            });
+            const data = await getResponseData(response);
+
+            setUser(data.user);
+            return { success: true };
+        } catch (error) {
+            return {
+                success: false,
+                message: error instanceof Error ? error.message : "Authentication request failed",
+            };
+        }
+    }
+
+    function signup(email, password) {
+        return authenticate("signup", email, password);
     }
 
     function login(email, password) {
-        const users = JSON.parse(localStorage.getItem('users')) || [];
-        const user = users.find((u) => u.email === email && u.password === password);
+        return authenticate("login", email, password);
+    }
 
-        if (!user) {
-            return { success: false, message: "Invalid email or password" };
+    async function logout() {
+        try {
+            const response = await fetch(`${AUTH_API_URL}/logout`, {
+                method: "POST",
+                credentials: "include",
+            });
+            await getResponseData(response);
+            setUser(null);
+            return { success: true };
+        } catch (error) {
+            return {
+                success: false,
+                message: error instanceof Error ? error.message : "Logout failed",
+            };
         }
-
-        localStorage.setItem("currentUserEmail", email);
-        setUser({ email });
-        return { success: true };
     }
 
-    function logout() {
-        localStorage.removeItem("currentUserEmail");
-        setUser(null);
-    }
     return (
         <AuthContext.Provider value={{ signup, user, login, logout }}>
             {children}
         </AuthContext.Provider>
-    )
+    );
 }

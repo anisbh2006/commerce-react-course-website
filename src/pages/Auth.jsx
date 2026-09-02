@@ -7,7 +7,7 @@ import {useNavigate} from "react-router-dom";
 export default function Auth() {
     const [ mode, setMode ] = useState("signup");
     const[ error, setError ] = useState(null);
-    const { signup, user, login, logout } = useContext(AuthContext);
+    const { signup, user, login } = useContext(AuthContext);
     const navigate = useNavigate();
 
 
@@ -18,15 +18,15 @@ export default function Auth() {
     } = useForm();
 
 
-    function onSubmit(data) {
+    async function onSubmit(data) {
     setError(null);
 
     let result;
 
     if (mode === "signup") {
-        result = signup(data.email, data.password);
+        result = await signup(data.email, data.password);
     } else {
-        result = login(data.email, data.password);
+        result = await login(data.email, data.password);
     }
 
     if (result.success) {
@@ -34,8 +34,6 @@ export default function Auth() {
     } else {
         setError(result.message);
     }
-
-    console.log(result);
 }
     return (
     <div className="page">
@@ -83,12 +81,12 @@ export default function Auth() {
                     {mode === "signup" ? (
                         <p>
                             Already have an account? {""}
-                            <span className="auth-link" onClick={() => setMode("login")}>Login</span>
+                            <button className="auth-link" type="button" onClick={() => setMode("login")}>Login</button>
                         </p>
                     ) : (
                         <p>
                             Don't have an account? {""}
-                            <span className="auth-link" onClick={() => setMode("signup")}>Sign Up</span>
+                            <button className="auth-link" type="button" onClick={() => setMode("signup")}>Sign Up</button>
                         </p>
                     )}
                 </div>
@@ -97,4 +95,3 @@ export default function Auth() {
     </div>
     );
 }
-
