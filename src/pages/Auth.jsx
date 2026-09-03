@@ -1,21 +1,14 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
+import { useContext } from "react";
+import { AuthContext  } from "../context/AuthContext";
 import {useNavigate} from "react-router-dom";
-import { useAuth } from "../context/AuthContext";
 
 export default function Auth() {
     const [ mode, setMode ] = useState("signup");
     const[ error, setError ] = useState(null);
-<<<<<<< HEAD
-    const { signup, user, login } = useContext(AuthContext);
-=======
-
->>>>>>> product details
+    const { signup, user, login, logout } = useContext(AuthContext);
     const navigate = useNavigate();
-
-    const { signup, login } = useAuth();
-
-
 
 
 
@@ -25,15 +18,15 @@ export default function Auth() {
     } = useForm();
 
 
-    async function onSubmit(data) {
+    function onSubmit(data) {
     setError(null);
 
     let result;
 
     if (mode === "signup") {
-        result = await signup(data.email, data.password);
+        result = signup(data.email, data.password);
     } else {
-        result = await login(data.email, data.password);
+        result = login(data.email, data.password);
     }
 
     if (result.success) {
@@ -41,11 +34,15 @@ export default function Auth() {
     } else {
         setError(result.message);
     }
+
+    console.log(result);
 }
     return (
     <div className="page">
         <div className="container">
             <div className="auth-container">
+                {user && <p>user logged in : {user.email}</p>}
+                <h1 className="page-title">{mode === "signup" ? "Sign Up" : "Login"}</h1>
                 <form className="auth-form" onSubmit={handleSubmit(onSubmit)}>
 
                     {error && <div className="error-message">{error}</div>}
@@ -86,12 +83,12 @@ export default function Auth() {
                     {mode === "signup" ? (
                         <p>
                             Already have an account? {""}
-                            <button className="auth-link" type="button" onClick={() => setMode("login")}>Login</button>
+                            <span className="auth-link" onClick={() => setMode("login")}>Login</span>
                         </p>
                     ) : (
                         <p>
                             Don't have an account? {""}
-                            <button className="auth-link" type="button" onClick={() => setMode("signup")}>Sign Up</button>
+                            <span className="auth-link" onClick={() => setMode("signup")}>Sign Up</span>
                         </p>
                     )}
                 </div>
@@ -100,10 +97,4 @@ export default function Auth() {
     </div>
     );
 }
-<<<<<<< HEAD
-=======
 
-
-
-
->>>>>>> product details
