@@ -1,6 +1,10 @@
+<<<<<<< HEAD
 import { createContext, useEffect, useState } from "react";
+=======
+import { createContext , useState, useContext } from "react";
+>>>>>>> product details
 
-export const AuthContext = createContext(null);
+const AuthContext = createContext(null);
 
 const AUTH_API_URL = "/api/auth";
 
@@ -95,5 +99,15 @@ export default function AuthProvider({ children }) {
         <AuthContext.Provider value={{ signup, user, login, logout }}>
             {children}
         </AuthContext.Provider>
+<<<<<<< HEAD
     );
+=======
+    )
+}
+
+
+export function useAuth() {
+    const context = useContext(AuthContext);
+    return context;
+>>>>>>> product details
 }
